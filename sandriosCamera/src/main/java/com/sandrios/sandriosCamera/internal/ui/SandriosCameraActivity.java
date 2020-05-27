@@ -19,6 +19,7 @@ import com.sandrios.sandriosCamera.internal.configuration.ConfigurationProvider;
 import com.sandrios.sandriosCamera.internal.controller.CameraController;
 import com.sandrios.sandriosCamera.internal.controller.view.CameraView;
 import com.sandrios.sandriosCamera.internal.ui.view.AspectFrameLayout;
+import com.sandrios.sandriosCamera.internal.utils.LogUtils;
 import com.sandrios.sandriosCamera.internal.utils.Size;
 import com.sandrios.sandriosCamera.internal.utils.Utils;
 
@@ -109,6 +110,7 @@ abstract public class SandriosCameraActivity<CameraId> extends AppCompatActivity
     }
 
     public final void setCameraPreview(View preview, Size previewSize) {
+        LogUtils.d("setCameraPreview() called with: preview = [" + preview + "], previewSize = [" + previewSize + "]");
         onCameraControllerReady();
 
         if (previewContainer == null || preview == null) return;

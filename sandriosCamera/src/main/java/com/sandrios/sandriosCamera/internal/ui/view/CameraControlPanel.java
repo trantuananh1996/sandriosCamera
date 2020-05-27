@@ -315,6 +315,11 @@ public class CameraControlPanel extends RelativeLayout
         recordButton.performClick();
     }
 
+    public void setCameraType(int currentCameraType) {
+        Log.d("setCameraType()"," called with: currentCameraType = [" + currentCameraType + "]");
+        cameraSwitchView.setCameraType(currentCameraType);
+    }
+
     public interface SettingsClickListener {
         void onSettingsClick();
     }

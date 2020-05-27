@@ -4,6 +4,8 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.widget.FrameLayout;
 
+import com.sandrios.sandriosCamera.internal.utils.LogUtils;
+
 /**
  * Layout that adjusts to maintain a specific aspect ratio.
  */
@@ -22,6 +24,7 @@ public class AspectFrameLayout extends FrameLayout {
     }
 
     public void setAspectRatio(double aspectRatio) {
+        LogUtils.d("setAspectRatio() called with: aspectRatio = [" + aspectRatio + "]");
         if (aspectRatio < 0) {
             throw new IllegalArgumentException();
         }
@@ -34,7 +37,7 @@ public class AspectFrameLayout extends FrameLayout {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-
+        LogUtils.d("onMeasure() called with: widthMeasureSpec = [" + widthMeasureSpec + "], heightMeasureSpec = [" + heightMeasureSpec + "]");
         if (targetAspectRatio > 0) {
             int initialWidth = MeasureSpec.getSize(widthMeasureSpec);
             int initialHeight = MeasureSpec.getSize(heightMeasureSpec);

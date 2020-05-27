@@ -13,6 +13,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,6 +39,7 @@ import com.sandrios.sandriosCamera.internal.ui.view.CameraSwitchView;
 import com.sandrios.sandriosCamera.internal.ui.view.FlashSwitchView;
 import com.sandrios.sandriosCamera.internal.ui.view.MediaActionSwitchView;
 import com.sandrios.sandriosCamera.internal.ui.view.RecordButton;
+import com.sandrios.sandriosCamera.internal.utils.LogUtils;
 import com.sandrios.sandriosCamera.internal.utils.RecyclerItemClickListener;
 import com.sandrios.sandriosCamera.internal.utils.Size;
 import com.sandrios.sandriosCamera.internal.utils.Utils;
@@ -78,6 +80,7 @@ public abstract class BaseSandriosActivity<CameraId> extends SandriosCameraActiv
     protected boolean autoRecord = false;
     protected int minimumVideoDuration = -1;
     protected boolean showPicker = true;
+    protected boolean enablePreview = true;
     @MediaActionSwitchView.MediaActionState
     protected int currentMediaActionState;
     @CameraSwitchView.CameraType
@@ -114,6 +117,7 @@ public abstract class BaseSandriosActivity<CameraId> extends SandriosCameraActiv
 
                     }
                 }).check();
+
     }
 
     @Override
@@ -127,10 +131,21 @@ public abstract class BaseSandriosActivity<CameraId> extends SandriosCameraActiv
 
     @Override
     protected void onCameraControllerReady() {
+        Log.d("onCameraControllerReady() ", "called");
         super.onCameraControllerReady();
 
         videoQualities = getVideoQualityOptions();
         photoQualities = getPhotoQualityOptions();
+        Bundle bundle = getIntent().getExtras();
+        if (bundle != null && bundle.containsKey(CameraConfiguration.Arguments.CAMERA_TYPE)) {
+            Log.e("Here","jump");
+            int cameraType = bundle.getInt(CameraConfiguration.Arguments.CAMERA_TYPE);
+            getIntent().removeExtra(CameraConfiguration.Arguments.CAMERA_TYPE);
+            if (cameraType != currentCameraType) {
+                onCameraTypeChanged(cameraType);
+                if (cameraControlPanel != null) cameraControlPanel.setCameraType(cameraType);
+            }
+        }
     }
 
     @Override
@@ -204,6 +219,8 @@ public abstract class BaseSandriosActivity<CameraId> extends SandriosCameraActiv
 
             if (bundle.containsKey(CameraConfiguration.Arguments.SHOW_PICKER))
                 showPicker = bundle.getBoolean(CameraConfiguration.Arguments.SHOW_PICKER);
+            if (bundle.containsKey(CameraConfiguration.Arguments.ENABLE_PREVIEW))
+                enablePreview = bundle.getBoolean(CameraConfiguration.Arguments.ENABLE_PREVIEW);
 
             if (bundle.containsKey(CameraConfiguration.Arguments.ENABLE_CROP))
                 enableImageCrop = bundle.getBoolean(CameraConfiguration.Arguments.ENABLE_CROP);
@@ -259,6 +276,7 @@ public abstract class BaseSandriosActivity<CameraId> extends SandriosCameraActiv
             cameraControlPanel.setSettingsClickListener(this);
             cameraControlPanel.setPickerItemClickListener(this);
             cameraControlPanel.shouldShowCrop(enableImageCrop);
+            cameraControlPanel.setCameraType(currentCameraType);
 
             if (autoRecord) {
                 new Handler().postDelayed(new Runnable() {
@@ -316,18 +334,16 @@ public abstract class BaseSandriosActivity<CameraId> extends SandriosCameraActiv
 
     @Override
     public void onItemClick(View view, int position) {
-        String filePath = mediaList.get(position).getPath();
-        int mimeType = getMimeType(getApplicationContext(), filePath);
-        Intent resultIntent = new Intent();
-        resultIntent.putExtra(SandriosCamera.MEDIA, new Media(mimeType, filePath));
-        setResult(RESULT_OK, resultIntent);
-        this.finish();
+        returnImage(mediaList.get(position).getPath());
     }
 
     @Override
     public void onCameraTypeChanged(@CameraSwitchView.CameraType int cameraType) {
         if (currentCameraType == cameraType) return;
         currentCameraType = cameraType;
+
+        if (cameraControlPanel == null) return;
+        Log.d("onCameraTypeChanged()", " called with: cameraType = [" + cameraType + "]");
 
         cameraControlPanel.lockControls();
         cameraControlPanel.allowRecord(false);
@@ -422,6 +438,7 @@ public abstract class BaseSandriosActivity<CameraId> extends SandriosCameraActiv
 
     @Override
     public void updateCameraPreview(Size size, View cameraPreview) {
+        LogUtils.d("updateCameraPreview() called with: size = [" + size + "], cameraPreview = [" + cameraPreview + "]");
         cameraControlPanel.unLockControls();
         cameraControlPanel.allowRecord(true);
 
@@ -440,7 +457,20 @@ public abstract class BaseSandriosActivity<CameraId> extends SandriosCameraActiv
 
     @Override
     public void onPhotoTaken() {
-        startPreviewActivity();
+        if (enablePreview)
+            startPreviewActivity();
+        else {
+            returnImage(getCameraController().getOutputFile().toString());
+        }
+    }
+
+    private void returnImage(String filePath) {
+        int mimeType = getMimeType(getApplicationContext(), filePath);
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra(SandriosCamera.MEDIA, new Media(mimeType, filePath));
+        resultIntent.putExtra("cameraType",currentCameraType);
+        setResult(RESULT_OK, resultIntent);
+        this.finish();
     }
 
     @Override
@@ -471,12 +501,7 @@ public abstract class BaseSandriosActivity<CameraId> extends SandriosCameraActiv
         if (resultCode == RESULT_OK) {
             if (requestCode == REQUEST_PREVIEW_CODE) {
                 if (PreviewActivity.isResultConfirm(data)) {
-                    String filePath = PreviewActivity.getMediaFilePatch(data);
-                    int mimeType = getMimeType(getApplicationContext(), filePath);
-                    Intent resultIntent = new Intent();
-                    resultIntent.putExtra(SandriosCamera.MEDIA, new Media(mimeType, filePath));
-                    setResult(RESULT_OK, resultIntent);
-                    this.finish();
+                    returnImage(PreviewActivity.getMediaFilePatch(data));
                 } else if (PreviewActivity.isResultCancel(data)) {
                     //ignore, just proceed the camera
 //                    this.finish();

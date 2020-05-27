@@ -6,6 +6,7 @@ import android.content.Intent;
 import com.sandrios.sandriosCamera.internal.configuration.CameraConfiguration;
 import com.sandrios.sandriosCamera.internal.ui.camera.Camera1Activity;
 import com.sandrios.sandriosCamera.internal.ui.camera2.Camera2Activity;
+import com.sandrios.sandriosCamera.internal.ui.view.CameraSwitchView;
 import com.sandrios.sandriosCamera.internal.utils.CameraHelper;
 
 /**
@@ -19,9 +20,12 @@ public class SandriosCamera {
     private static SandriosCamera mInstance = null;
     private int mediaAction = CameraConfiguration.MEDIA_ACTION_BOTH;
     private boolean showPicker = true;
+    private boolean enablePreview = true;
+    private int cameraType = CameraSwitchView.CAMERA_TYPE_REAR;
     private boolean autoRecord = false;
     private boolean enableImageCrop = false;
     private long videoSize = -1;
+    private CameraSwitchView.OnCameraTypeChangeListener cameraTypeChangeListener;
 
     public static SandriosCamera with() {
         if (mInstance == null) {
@@ -32,6 +36,18 @@ public class SandriosCamera {
 
     public SandriosCamera setShowPicker(boolean showPicker) {
         this.showPicker = showPicker;
+        return mInstance;
+    }
+
+    public SandriosCamera setCameraType(int cameraType) {
+        if (cameraType != CameraSwitchView.CAMERA_TYPE_FRONT && cameraType != CameraSwitchView.CAMERA_TYPE_REAR)
+            return mInstance;
+        this.cameraType = cameraType;
+        return mInstance;
+    }
+
+    public SandriosCamera setEnablePreview(boolean enablePreview) {
+        this.enablePreview = enablePreview;
         return mInstance;
     }
 
@@ -71,12 +87,19 @@ public class SandriosCamera {
             cameraIntent.putExtra(CameraConfiguration.Arguments.MEDIA_ACTION, mediaAction);
             cameraIntent.putExtra(CameraConfiguration.Arguments.ENABLE_CROP, enableImageCrop);
             cameraIntent.putExtra(CameraConfiguration.Arguments.AUTO_RECORD, autoRecord);
-
+            cameraIntent.putExtra(CameraConfiguration.Arguments.ENABLE_PREVIEW, enablePreview);
+            cameraIntent.putExtra(CameraConfiguration.Arguments.CAMERA_TYPE, cameraType);
+            cameraIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
             if (videoSize > 0) {
                 cameraIntent.putExtra(CameraConfiguration.Arguments.VIDEO_FILE_SIZE, videoSize * 1024 * 1024);
             }
             activity.startActivityForResult(cameraIntent, RESULT_CODE);
         }
+    }
+
+    public SandriosCamera setOnCameraTypeChangeListener(CameraSwitchView.OnCameraTypeChangeListener onCameraTypeChangeListener) {
+        this.cameraTypeChangeListener = onCameraTypeChangeListener;
+        return mInstance;
     }
 
     public class MediaType {

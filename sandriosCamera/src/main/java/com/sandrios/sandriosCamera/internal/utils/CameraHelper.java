@@ -216,7 +216,7 @@ public final class CameraHelper {
 
     @SuppressWarnings("deprecation")
     public static Size getSizeWithClosestRatio(List<Size> sizes, int width, int height) {
-
+        LogUtils.d("getSizeWithClosestRatio() called with: sizes = [" + sizes + "], width = [" + width + "], height = [" + height + "]");
         if (sizes == null) return null;
 
         double MIN_TOLERANCE = 100;
@@ -255,7 +255,7 @@ public final class CameraHelper {
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public static Size getOptimalPreviewSize(Size[] sizes, int width, int height) {
-
+        LogUtils.d("getOptimalPreviewSize() called with: sizes = [" + sizes + "], width = [" + width + "], height = [" + height + "]");
         if (sizes == null) return null;
 
         final double ASPECT_TOLERANCE = 0.1;
@@ -290,7 +290,7 @@ public final class CameraHelper {
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public static Size getSizeWithClosestRatio(Size[] sizes, int width, int height) {
-
+        LogUtils.d("getSizeWithClosestRatio() called with: sizes = [" + sizes + "], width = [" + width + "], height = [" + height + "]");
         if (sizes == null) return null;
 
         double MIN_TOLERANCE = 100;
@@ -329,6 +329,7 @@ public final class CameraHelper {
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public static Size chooseOptimalSize(Size[] choices, int width, int height, Size aspectRatio) {
+        LogUtils.d("chooseOptimalSize() called with: choices = [" + choices + "], width = [" + width + "], height = [" + height + "], aspectRatio = [" + aspectRatio + "]");
         // Collect the supported resolutions that are at least as big as the preview Surface
         List<Size> bigEnough = new ArrayList<>();
         int w = aspectRatio.getWidth();

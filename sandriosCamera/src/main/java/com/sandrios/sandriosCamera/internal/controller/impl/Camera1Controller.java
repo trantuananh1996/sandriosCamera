@@ -16,6 +16,7 @@ import com.sandrios.sandriosCamera.internal.manager.listener.CameraPhotoListener
 import com.sandrios.sandriosCamera.internal.manager.listener.CameraVideoListener;
 import com.sandrios.sandriosCamera.internal.ui.view.AutoFitSurfaceView;
 import com.sandrios.sandriosCamera.internal.utils.CameraHelper;
+import com.sandrios.sandriosCamera.internal.utils.LogUtils;
 import com.sandrios.sandriosCamera.internal.utils.Size;
 
 import java.io.File;
@@ -127,6 +128,7 @@ public class Camera1Controller implements CameraController<Integer>,
 
     @Override
     public void onCameraOpened(Integer cameraId, Size previewSize, SurfaceHolder.Callback surfaceCallback) {
+        LogUtils.d("onCameraOpened() called with: cameraId = [" + cameraId + "], previewSize = [" + previewSize + "], surfaceCallback = [" + surfaceCallback + "]");
         cameraView.updateUiForMediaAction(configurationProvider.getMediaAction());
         cameraView.updateCameraPreview(previewSize, new AutoFitSurfaceView(cameraView.getActivity(), surfaceCallback));
         cameraView.updateCameraSwitcher(getNumberOfCameras());

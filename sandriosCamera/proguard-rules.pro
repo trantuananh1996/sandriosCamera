@@ -1,7 +1,7 @@
 
 -keep public class com.sandrios.** { *; }
 
--keep public class android.support.v7.widget.** { *; }
+-keep public class androidx.recyclerview.widget.** { *; }
 -keep public class android.support.v7.internal.widget.** { *; }
 -keep public class android.support.v7.internal.view.menu.** { *; }
 

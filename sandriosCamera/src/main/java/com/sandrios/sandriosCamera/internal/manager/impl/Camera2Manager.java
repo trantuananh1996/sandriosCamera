@@ -37,6 +37,7 @@ import com.sandrios.sandriosCamera.internal.manager.listener.CameraPhotoListener
 import com.sandrios.sandriosCamera.internal.manager.listener.CameraVideoListener;
 import com.sandrios.sandriosCamera.internal.utils.CameraHelper;
 import com.sandrios.sandriosCamera.internal.utils.ImageSaver;
+import com.sandrios.sandriosCamera.internal.utils.LogUtils;
 import com.sandrios.sandriosCamera.internal.utils.Size;
 
 import java.io.File;
@@ -84,14 +85,12 @@ public final class Camera2Manager extends BaseCameraManager<String, TextureView.
     private CameraDevice.StateCallback stateCallback = new CameraDevice.StateCallback() {
         @Override
         public void onOpened(@NonNull CameraDevice cameraDevice) {
+            LogUtils.d("onOpened() called with: cameraDevice = [" + cameraDevice + "]");
             currentInstance.cameraDevice = cameraDevice;
             if (cameraOpenListener != null) {
-                uiHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (!TextUtils.isEmpty(currentCameraId) && previewSize != null && currentInstance != null)
-                            cameraOpenListener.onCameraOpened(currentCameraId, previewSize, currentInstance);
-                    }
+                uiHandler.post(() -> {
+                    if (!TextUtils.isEmpty(currentCameraId) && previewSize != null && currentInstance != null)
+                        cameraOpenListener.onCameraOpened(currentCameraId, previewSize, currentInstance);
                 });
             }
         }
@@ -101,12 +100,7 @@ public final class Camera2Manager extends BaseCameraManager<String, TextureView.
             cameraDevice.close();
             currentInstance.cameraDevice = null;
 
-            uiHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    cameraOpenListener.onCameraOpenError();
-                }
-            });
+            uiHandler.post(() -> cameraOpenListener.onCameraOpenError());
         }
 
         @Override
@@ -114,12 +108,7 @@ public final class Camera2Manager extends BaseCameraManager<String, TextureView.
             cameraDevice.close();
             currentInstance.cameraDevice = null;
 
-            uiHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    cameraOpenListener.onCameraOpenError();
-                }
-            });
+            uiHandler.post(() -> cameraOpenListener.onCameraOpenError());
         }
     };
     private CameraCaptureSession.CaptureCallback captureCallback
@@ -187,32 +176,19 @@ public final class Camera2Manager extends BaseCameraManager<String, TextureView.
     public void openCamera(String cameraId, final CameraOpenListener<String, TextureView.SurfaceTextureListener> cameraOpenListener) {
         this.currentCameraId = cameraId;
         this.cameraOpenListener = cameraOpenListener;
-        backgroundHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (context == null || configurationProvider == null) {
-                    if (cameraOpenListener != null) {
-                        uiHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                cameraOpenListener.onCameraOpenError();
-                            }
-                        });
-                    }
-                    return;
+        backgroundHandler.post(() -> {
+            if (context == null || configurationProvider == null) {
+                if (cameraOpenListener != null) {
+                    uiHandler.post(cameraOpenListener::onCameraOpenError);
                 }
-                prepareCameraOutputs();
-                try {
-                    manager.openCamera(currentCameraId, stateCallback, backgroundHandler);
-                } catch (Exception e) {
-                    if (cameraOpenListener != null) {
-                        uiHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                cameraOpenListener.onCameraOpenError();
-                            }
-                        });
-                    }
+                return;
+            }
+            prepareCameraOutputs();
+            try {
+                manager.openCamera(currentCameraId, stateCallback, backgroundHandler);
+            } catch (Exception e) {
+                if (cameraOpenListener != null) {
+                    uiHandler.post(cameraOpenListener::onCameraOpenError);
                 }
             }
         });
@@ -220,18 +196,10 @@ public final class Camera2Manager extends BaseCameraManager<String, TextureView.
 
     @Override
     public void closeCamera(final CameraCloseListener<String> cameraCloseListener) {
-        backgroundHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                closeCamera();
-                if (cameraCloseListener != null) {
-                    uiHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            cameraCloseListener.onCameraClosed(currentCameraId);
-                        }
-                    });
-                }
+        backgroundHandler.post(() -> {
+            closeCamera();
+            if (cameraCloseListener != null) {
+                uiHandler.post(() -> cameraCloseListener.onCameraClosed(currentCameraId));
             }
         });
     }
@@ -246,12 +214,7 @@ public final class Camera2Manager extends BaseCameraManager<String, TextureView.
         this.outputPath = photoFile;
         this.cameraPhotoListener = cameraPhotoListener;
 
-        backgroundHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                lockFocus();
-            }
-        });
+        backgroundHandler.post(this::lockFocus);
 
     }
 
@@ -269,63 +232,60 @@ public final class Camera2Manager extends BaseCameraManager<String, TextureView.
         this.cameraVideoListener = cameraVideoListener;
 
         if (cameraVideoListener != null)
-            backgroundHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    closePreviewSession();
-                    if (prepareVideoRecorder()) {
+            backgroundHandler.post(() -> {
+                closePreviewSession();
+                if (prepareVideoRecorder()) {
 
-                        SurfaceTexture texture = currentInstance.texture;
-                        texture.setDefaultBufferSize(videoSize.getWidth(), videoSize.getHeight());
+                    SurfaceTexture texture = currentInstance.texture;
+                    texture.setDefaultBufferSize(videoSize.getWidth(), videoSize.getHeight());
 
-                        try {
-                            previewRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
-                            List<Surface> surfaces = new ArrayList<>();
+                    try {
+                        previewRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
+                        List<Surface> surfaces = new ArrayList<>();
 
-                            Surface previewSurface = workingSurface;
-                            surfaces.add(previewSurface);
-                            previewRequestBuilder.addTarget(previewSurface);
+                        Surface previewSurface = workingSurface;
+                        surfaces.add(previewSurface);
+                        previewRequestBuilder.addTarget(previewSurface);
 
-                            workingSurface = videoRecorder.getSurface();
-                            surfaces.add(workingSurface);
-                            previewRequestBuilder.addTarget(workingSurface);
+                        workingSurface = videoRecorder.getSurface();
+                        surfaces.add(workingSurface);
+                        previewRequestBuilder.addTarget(workingSurface);
 
-                            cameraDevice.createCaptureSession(surfaces, new CameraCaptureSession.StateCallback() {
-                                @Override
-                                public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
-                                    captureSession = cameraCaptureSession;
+                        cameraDevice.createCaptureSession(surfaces, new CameraCaptureSession.StateCallback() {
+                            @Override
+                            public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
+                                captureSession = cameraCaptureSession;
 
-                                    previewRequestBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
-                                    try {
-                                        captureSession.setRepeatingRequest(previewRequestBuilder.build(), null, backgroundHandler);
-                                    } catch (Exception e) {
-                                        e.printStackTrace();
-                                    }
-
-                                    try {
-                                        videoRecorder.start();
-                                    } catch (Exception ignore) {
-                                        Log.e(TAG, "videoRecorder.start(): ", ignore);
-                                    }
-
-                                    isVideoRecording = true;
-
-                                    uiHandler.post(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            cameraVideoListener.onVideoRecordStarted(videoSize);
-                                        }
-                                    });
+                                previewRequestBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
+                                try {
+                                    captureSession.setRepeatingRequest(previewRequestBuilder.build(), null, backgroundHandler);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
                                 }
 
-                                @Override
-                                public void onConfigureFailed(@NonNull CameraCaptureSession cameraCaptureSession) {
-                                    Log.d(TAG, "onConfigureFailed");
+                                try {
+                                    videoRecorder.start();
+                                } catch (Exception ignore) {
+                                    Log.e(TAG, "videoRecorder.start(): ", ignore);
                                 }
-                            }, backgroundHandler);
-                        } catch (Exception e) {
-                            Log.e(TAG, "startVideoRecord: ", e);
-                        }
+
+                                isVideoRecording = true;
+
+                                uiHandler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        cameraVideoListener.onVideoRecordStarted(videoSize);
+                                    }
+                                });
+                            }
+
+                            @Override
+                            public void onConfigureFailed(@NonNull CameraCaptureSession cameraCaptureSession) {
+                                Log.d(TAG, "onConfigureFailed");
+                            }
+                        }, backgroundHandler);
+                    } catch (Exception e) {
+                        Log.e(TAG, "startVideoRecord: ", e);
                     }
                 }
             });
@@ -334,28 +294,20 @@ public final class Camera2Manager extends BaseCameraManager<String, TextureView.
     @Override
     public void stopVideoRecord() {
         if (isVideoRecording)
-            backgroundHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    closePreviewSession();
+            backgroundHandler.post(() -> {
+                closePreviewSession();
 
-                    if (videoRecorder != null) {
-                        try {
-                            videoRecorder.stop();
-                        } catch (Exception ignore) {
-                        }
+                if (videoRecorder != null) {
+                    try {
+                        videoRecorder.stop();
+                    } catch (Exception ignore) {
                     }
-                    isVideoRecording = false;
-                    releaseVideoRecorder();
+                }
+                isVideoRecording = false;
+                releaseVideoRecorder();
 
-                    if (cameraVideoListener != null) {
-                        uiHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                cameraVideoListener.onVideoRecordStopped(outputPath);
-                            }
-                        });
-                    }
+                if (cameraVideoListener != null) {
+                    uiHandler.post(() -> cameraVideoListener.onVideoRecordStopped(outputPath));
                 }
             });
     }
@@ -500,7 +452,8 @@ public final class Camera2Manager extends BaseCameraManager<String, TextureView.
 
             if (configurationProvider.getMediaAction() == CameraConfiguration.MEDIA_ACTION_PHOTO
                     || configurationProvider.getMediaAction() == CameraConfiguration.MEDIA_ACTION_BOTH) {
-
+                int orientation = context.getResources().getConfiguration().orientation;
+                LogUtils.d("Screen ort " + orientation);
                 if (windowSize.getHeight() * windowSize.getWidth() > photoSize.getWidth() * photoSize.getHeight()) {
                     previewSize = CameraHelper.getOptimalPreviewSize(Size.fromArray2(map.getOutputSizes(SurfaceTexture.class)), photoSize.getWidth(), photoSize.getHeight());
                 } else {
@@ -748,12 +701,7 @@ public final class Camera2Manager extends BaseCameraManager<String, TextureView.
             public void onSuccessFinish() {
                 Log.d(TAG, "onPhotoSuccessFinish: ");
                 if (cameraPhotoListener != null) {
-                    uiHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            cameraPhotoListener.onPhotoTaken(outputPath);
-                        }
-                    });
+                    uiHandler.post(() -> cameraPhotoListener.onPhotoTaken(outputPath));
                 }
                 unlockFocus();
             }
@@ -761,12 +709,7 @@ public final class Camera2Manager extends BaseCameraManager<String, TextureView.
             @Override
             public void onError() {
                 Log.d(TAG, "onPhotoError: ");
-                uiHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        cameraPhotoListener.onPhotoTakeError();
-                    }
-                });
+                uiHandler.post(() -> cameraPhotoListener.onPhotoTakeError());
             }
         }));
     }

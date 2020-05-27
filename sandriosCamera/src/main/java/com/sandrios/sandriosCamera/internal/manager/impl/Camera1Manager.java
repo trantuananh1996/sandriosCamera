@@ -6,7 +6,7 @@ import android.hardware.Camera;
 import android.media.ExifInterface;
 import android.media.MediaRecorder;
 import android.os.Build;
-import android.support.annotation.RestrictTo;
+import androidx.annotation.RestrictTo;
 import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
@@ -19,6 +19,7 @@ import com.sandrios.sandriosCamera.internal.manager.listener.CameraOpenListener;
 import com.sandrios.sandriosCamera.internal.manager.listener.CameraPhotoListener;
 import com.sandrios.sandriosCamera.internal.manager.listener.CameraVideoListener;
 import com.sandrios.sandriosCamera.internal.utils.CameraHelper;
+import com.sandrios.sandriosCamera.internal.utils.LogUtils;
 import com.sandrios.sandriosCamera.internal.utils.Size;
 
 import java.io.File;
@@ -47,6 +48,10 @@ public class Camera1Manager extends BaseCameraManager<Integer, SurfaceHolder.Cal
     private CameraVideoListener videoListener;
     private CameraPhotoListener photoListener;
 
+    public Camera getCamera() {
+        return camera;
+    }
+
     private Camera1Manager() {
 
     }
@@ -60,30 +65,22 @@ public class Camera1Manager extends BaseCameraManager<Integer, SurfaceHolder.Cal
     public void openCamera(final Integer cameraId,
                            final CameraOpenListener<Integer, SurfaceHolder.Callback> cameraOpenListener) {
         this.currentCameraId = cameraId;
-        backgroundHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    camera = Camera.open(cameraId);
-                    prepareCameraOutputs();
-                    if (cameraOpenListener != null) {
-                        uiHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                cameraOpenListener.onCameraOpened(cameraId, previewSize, currentInstance);
-                            }
-                        });
-                    }
-                } catch (Exception error) {
-                    Log.d(TAG, "Can't open camera: " + error.getMessage());
-                    if (cameraOpenListener != null) {
-                        uiHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                cameraOpenListener.onCameraOpenError();
-                            }
-                        });
-                    }
+        backgroundHandler.post(() -> {
+            try {
+                camera = Camera.open(cameraId);
+                prepareCameraOutputs();
+                if (cameraOpenListener != null) {
+                    uiHandler.post(() -> cameraOpenListener.onCameraOpened(cameraId, previewSize, currentInstance));
+                }
+            } catch (Exception error) {
+                Log.d(TAG, "Can't open camera: " + error.getMessage());
+                if (cameraOpenListener != null) {
+                    uiHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            cameraOpenListener.onCameraOpenError();
+                        }
+                    });
                 }
             }
         });
@@ -91,20 +88,15 @@ public class Camera1Manager extends BaseCameraManager<Integer, SurfaceHolder.Cal
 
     @Override
     public void closeCamera(final CameraCloseListener<Integer> cameraCloseListener) {
-        backgroundHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (camera != null) {
-                    camera.release();
-                    camera = null;
-                    if (cameraCloseListener != null) {
-                        uiHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                cameraCloseListener.onCameraClosed(currentCameraId);
-                            }
-                        });
-                    }
+        if(backgroundHandler==null){
+            return;
+        }
+        backgroundHandler.post(() -> {
+            if (camera != null) {
+                camera.release();
+                camera = null;
+                if (cameraCloseListener != null) {
+                    uiHandler.post(() -> cameraCloseListener.onCameraClosed(currentCameraId));
                 }
             }
         });
@@ -114,14 +106,11 @@ public class Camera1Manager extends BaseCameraManager<Integer, SurfaceHolder.Cal
     public void takePhoto(File photoFile, CameraPhotoListener cameraPhotoListener) {
         this.outputPath = photoFile;
         this.photoListener = cameraPhotoListener;
-        backgroundHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (safeToTakePicture) {
-                    setCameraPhotoQuality(camera);
-                    camera.takePicture(null, null, currentInstance);
-                    safeToTakePicture = false;
-                }
+        backgroundHandler.post(() -> {
+            if (safeToTakePicture) {
+                setCameraPhotoQuality(camera);
+                camera.takePicture(null, null, currentInstance);
+                safeToTakePicture = false;
             }
         });
     }

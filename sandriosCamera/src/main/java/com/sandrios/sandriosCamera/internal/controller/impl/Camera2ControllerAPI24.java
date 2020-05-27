@@ -1,6 +1,7 @@
 package com.sandrios.sandriosCamera.internal.controller.impl;
 
 import android.annotation.TargetApi;
+import android.hardware.Camera;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -18,6 +19,7 @@ import com.sandrios.sandriosCamera.internal.manager.listener.CameraPhotoListener
 import com.sandrios.sandriosCamera.internal.manager.listener.CameraVideoListener;
 import com.sandrios.sandriosCamera.internal.ui.view.AutoFitSurfaceView;
 import com.sandrios.sandriosCamera.internal.utils.CameraHelper;
+import com.sandrios.sandriosCamera.internal.utils.LogUtils;
 import com.sandrios.sandriosCamera.internal.utils.Size;
 
 import java.io.File;
@@ -129,6 +131,7 @@ public class Camera2ControllerAPI24 implements CameraController<String>,
 
     @Override
     public void onCameraOpened(Integer openedCameraId, Size previewSize, SurfaceHolder.Callback surfaceTextureListener) {
+        LogUtils.d("onCameraOpened() called with: openedCameraId = [" + openedCameraId + "], previewSize = [" + previewSize + "], surfaceTextureListener = [" + surfaceTextureListener + "]");
         cameraView.updateUiForMediaAction(CameraConfiguration.MEDIA_ACTION_BOTH);
         cameraView.updateCameraPreview(previewSize, new AutoFitSurfaceView(cameraView.getActivity(), surfaceTextureListener));
         cameraView.updateCameraSwitcher(camera2Manager.getNumberOfCameras());
