@@ -95,11 +95,8 @@ public class CameraControlPanel extends RelativeLayout
         setRecordButtonListener(recordButtonListener);
 
         settingsButton.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_settings_white_24dp));
-        settingsButton.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (settingsClickListener != null) settingsClickListener.onSettingsClick();
-            }
+        settingsButton.setOnClickListener(view -> {
+            if (settingsClickListener != null) settingsClickListener.onSettingsClick();
         });
 
         if (hasFlash)
@@ -231,12 +228,7 @@ public class CameraControlPanel extends RelativeLayout
                         final long fileSize = mediaFile.length() / (1024 * 1024);
                         if ((fileSize - lastUpdateSize) >= 1) {
                             lastUpdateSize = fileSize;
-                            recordSizeText.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    recordSizeText.setText(fileSize + "Mb" + " / " + maxVideoFileSize / (1024 * 1024) + "Mb");
-                                }
-                            });
+                            recordSizeText.post(() -> recordSizeText.setText(fileSize + "Mb" + " / " + maxVideoFileSize / (1024 * 1024) + "Mb"));
                         }
                     }
                 };

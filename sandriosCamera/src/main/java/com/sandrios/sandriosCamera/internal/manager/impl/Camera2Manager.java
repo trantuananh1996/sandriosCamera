@@ -271,12 +271,7 @@ public final class Camera2Manager extends BaseCameraManager<String, TextureView.
 
                                 isVideoRecording = true;
 
-                                uiHandler.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        cameraVideoListener.onVideoRecordStarted(videoSize);
-                                    }
-                                });
+                                uiHandler.post(() -> cameraVideoListener.onVideoRecordStarted(videoSize));
                             }
 
                             @Override

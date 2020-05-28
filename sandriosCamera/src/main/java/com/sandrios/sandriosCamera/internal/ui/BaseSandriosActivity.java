@@ -279,12 +279,7 @@ public abstract class BaseSandriosActivity<CameraId> extends SandriosCameraActiv
             cameraControlPanel.setCameraType(currentCameraType);
 
             if (autoRecord) {
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        cameraControlPanel.startRecording();
-                    }
-                }, 1500);
+                new Handler().postDelayed(() -> cameraControlPanel.startRecording(), 1500);
             }
         }
         return cameraControlPanel;
@@ -306,23 +301,15 @@ public abstract class BaseSandriosActivity<CameraId> extends SandriosCameraActiv
             builder.setTitle(R.string.settings_photo_quality_title);
         }
 
-        builder.setPositiveButton(R.string.ok_label, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                if (newQuality > 0 && newQuality != mediaQuality) {
-                    mediaQuality = newQuality;
-                    dialogInterface.dismiss();
-                    cameraControlPanel.lockControls();
-                    getCameraController().switchQuality();
-                }
-            }
-        });
-        builder.setNegativeButton(R.string.cancel_label, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
+        builder.setPositiveButton(R.string.ok_label, (dialogInterface, i) -> {
+            if (newQuality > 0 && newQuality != mediaQuality) {
+                mediaQuality = newQuality;
                 dialogInterface.dismiss();
+                cameraControlPanel.lockControls();
+                getCameraController().switchQuality();
             }
         });
+        builder.setNegativeButton(R.string.cancel_label, (dialogInterface, i) -> dialogInterface.dismiss());
         settingsDialog = builder.create();
         settingsDialog.show();
         WindowManager.LayoutParams layoutParams = new WindowManager.LayoutParams();
@@ -569,23 +556,11 @@ public abstract class BaseSandriosActivity<CameraId> extends SandriosCameraActiv
     }
 
     protected DialogInterface.OnClickListener getVideoOptionSelectedListener() {
-        return new DialogInterface.OnClickListener() {
-            @SuppressLint("WrongConstant")
-            @Override
-            public void onClick(DialogInterface dialogInterface, int index) {
-                newQuality = ((VideoQualityOption) videoQualities[index]).getMediaQuality();
-            }
-        };
+        return (dialogInterface, index) -> newQuality = ((VideoQualityOption) videoQualities[index]).getMediaQuality();
     }
 
     protected DialogInterface.OnClickListener getPhotoOptionSelectedListener() {
-        return new DialogInterface.OnClickListener() {
-            @SuppressLint("WrongConstant")
-            @Override
-            public void onClick(DialogInterface dialogInterface, int index) {
-                newQuality = ((PhotoQualityOption) photoQualities[index]).getMediaQuality();
-            }
-        };
+        return (dialogInterface, index) -> newQuality = ((PhotoQualityOption) photoQualities[index]).getMediaQuality();
     }
 
     private void fetchMediaList() {

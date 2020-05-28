@@ -1,12 +1,20 @@
 package com.sandrios.sandriosCamera.internal.manager.impl;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.ImageFormat;
+import android.graphics.Matrix;
 import android.graphics.PixelFormat;
+import android.graphics.Rect;
+import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.media.ExifInterface;
 import android.media.MediaRecorder;
 import android.os.Build;
+
 import androidx.annotation.RestrictTo;
+
 import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
@@ -22,6 +30,7 @@ import com.sandrios.sandriosCamera.internal.utils.CameraHelper;
 import com.sandrios.sandriosCamera.internal.utils.LogUtils;
 import com.sandrios.sandriosCamera.internal.utils.Size;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -48,9 +57,7 @@ public class Camera1Manager extends BaseCameraManager<Integer, SurfaceHolder.Cal
     private CameraVideoListener videoListener;
     private CameraPhotoListener photoListener;
 
-    public Camera getCamera() {
-        return camera;
-    }
+    public static Bitmap bitmap;
 
     private Camera1Manager() {
 
@@ -75,12 +82,7 @@ public class Camera1Manager extends BaseCameraManager<Integer, SurfaceHolder.Cal
             } catch (Exception error) {
                 Log.d(TAG, "Can't open camera: " + error.getMessage());
                 if (cameraOpenListener != null) {
-                    uiHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            cameraOpenListener.onCameraOpenError();
-                        }
-                    });
+                    uiHandler.post(cameraOpenListener::onCameraOpenError);
                 }
             }
         });
@@ -88,11 +90,13 @@ public class Camera1Manager extends BaseCameraManager<Integer, SurfaceHolder.Cal
 
     @Override
     public void closeCamera(final CameraCloseListener<Integer> cameraCloseListener) {
-        if(backgroundHandler==null){
+        if (backgroundHandler == null) {
             return;
         }
         backgroundHandler.post(() -> {
             if (camera != null) {
+                camera.setPreviewCallback(null);
+                camera.stopFaceDetection();
                 camera.release();
                 camera = null;
                 if (cameraCloseListener != null) {
@@ -123,19 +127,11 @@ public class Camera1Manager extends BaseCameraManager<Integer, SurfaceHolder.Cal
         this.videoListener = cameraVideoListener;
 
         if (videoListener != null)
-            backgroundHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    if (prepareVideoRecorder()) {
-                        videoRecorder.start();
-                        isVideoRecording = true;
-                        uiHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                videoListener.onVideoRecordStarted(videoSize);
-                            }
-                        });
-                    }
+            backgroundHandler.post(() -> {
+                if (prepareVideoRecorder()) {
+                    videoRecorder.start();
+                    isVideoRecording = true;
+                    uiHandler.post(() -> videoListener.onVideoRecordStarted(videoSize));
                 }
             });
     }
@@ -143,27 +139,19 @@ public class Camera1Manager extends BaseCameraManager<Integer, SurfaceHolder.Cal
     @Override
     public void stopVideoRecord() {
         if (isVideoRecording)
-            backgroundHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        if (videoRecorder != null) videoRecorder.stop();
-                    } catch (Exception ignore) {
-                        // ignore illegal state.
-                        // appear in case time or file size reach limit and stop already called.
-                    }
+            backgroundHandler.post(() -> {
+                try {
+                    if (videoRecorder != null) videoRecorder.stop();
+                } catch (Exception ignore) {
+                    // ignore illegal state.
+                    // appear in case time or file size reach limit and stop already called.
+                }
 
-                    isVideoRecording = false;
-                    releaseVideoRecorder();
+                isVideoRecording = false;
+                releaseVideoRecorder();
 
-                    if (videoListener != null) {
-                        uiHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                videoListener.onVideoRecordStopped(outputPath);
-                            }
-                        });
-                    }
+                if (videoListener != null) {
+                    uiHandler.post(() -> videoListener.onVideoRecordStopped(outputPath));
                 }
             });
     }
@@ -367,6 +355,18 @@ public class Camera1Manager extends BaseCameraManager<Integer, SurfaceHolder.Cal
             camera.setParameters(parameters);
             camera.setPreviewDisplay(surfaceHolder);
             camera.startPreview();
+            try {
+                camera.setPreviewCallback(previewCallback);
+//                camera.setFaceDetectionListener(new Camera.FaceDetectionListener() {
+//                    @Override
+//                    public void onFaceDetection(Camera.Face[] faces, Camera camera) {
+//                        LogUtils.d("onFaceDetection() called with: faces = [" + faces + "], camera = [" + camera + "]");
+//                    }
+//                });
+//                camera.startFaceDetection();
+            } catch (Exception e) {
+
+            }
             safeToTakePicture = true;
 
         } catch (IOException error) {
@@ -494,6 +494,7 @@ public class Camera1Manager extends BaseCameraManager<Integer, SurfaceHolder.Cal
 
     @Override
     public void surfaceCreated(SurfaceHolder surfaceHolder) {
+        LogUtils.d("surfaceCreated() called with: surfaceHolder = [" + surfaceHolder + "]");
         if (surfaceHolder.getSurface() == null) {
             return;
         }
@@ -504,9 +505,28 @@ public class Camera1Manager extends BaseCameraManager<Integer, SurfaceHolder.Cal
             camera.stopPreview();
         } catch (Exception ignore) {
         }
-
         startPreview(surfaceHolder);
+
     }
+
+    private Camera.PreviewCallback previewCallback = (data, cam) -> {
+        try {
+            Camera.Size previewSize = cam.getParameters().getPreviewSize();
+            YuvImage yuvImage = new YuvImage(data, ImageFormat.NV21, previewSize.width, previewSize.height, null);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            yuvImage.compressToJpeg(new Rect(0, 0, previewSize.width, previewSize.height), 80, baos);
+            byte[] jdata = baos.toByteArray();
+            Bitmap b = BitmapFactory.decodeByteArray(jdata, 0, jdata.length);
+
+            Matrix matrix = new Matrix();
+            matrix.postRotate(orientation * 90-90);
+            bitmap = Bitmap.createBitmap(b, 0, 0, b.getWidth(), b.getHeight(), matrix, true);
+
+            LogUtils.d("onPreviewFrame() called with: data = [" + data + "], cam = [" + bitmap + "]");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    };
 
     @Override
     public void surfaceChanged(SurfaceHolder surfaceHolder, int format, int width, int height) {
@@ -555,12 +575,7 @@ public class Camera1Manager extends BaseCameraManager<Integer, SurfaceHolder.Cal
             exif.saveAttributes();
 
             if (photoListener != null) {
-                uiHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        photoListener.onPhotoTaken(outputPath);
-                    }
-                });
+                uiHandler.post(() -> photoListener.onPhotoTaken(outputPath));
             }
         } catch (Throwable error) {
             Log.e(TAG, "Can't save exif info: " + error.getMessage());

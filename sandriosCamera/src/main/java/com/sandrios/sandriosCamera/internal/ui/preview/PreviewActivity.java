@@ -178,19 +178,16 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         setContentView(R.layout.activity_preview);
         mContext = this;
         surfaceView = findViewById(R.id.video_preview);
-        surfaceView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (mediaController == null) return false;
-                if (mediaController.isShowing()) {
-                    mediaController.hide();
-                    showButtonPanel(true);
-                } else {
-                    showButtonPanel(false);
-                    mediaController.show();
-                }
-                return false;
+        surfaceView.setOnTouchListener((v, event) -> {
+            if (mediaController == null) return false;
+            if (mediaController.isShowing()) {
+                mediaController.hide();
+                showButtonPanel(true);
+            } else {
+                showButtonPanel(false);
+                mediaController.show();
             }
+            return false;
         });
 
         videoPreviewContainer = findViewById(R.id.previewAspectFrameLayout);
@@ -201,17 +198,14 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         View reTakeMedia = findViewById(R.id.re_take_media);
         View cancelMediaAction = findViewById(R.id.cancel_media_action);
 
-        findViewById(R.id.crop_image).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                UCrop.Options options = new UCrop.Options();
-                options.setToolbarColor(ContextCompat.getColor(mContext, android.R.color.black));
-                options.setStatusBarColor(ContextCompat.getColor(mContext, android.R.color.black));
-                Uri uri = Uri.fromFile(new File(previewFilePath));
-                UCrop.of(uri, uri)
-                        .withOptions(options)
-                        .start(mContext);
-            }
+        findViewById(R.id.crop_image).setOnClickListener(view -> {
+            UCrop.Options options = new UCrop.Options();
+            options.setToolbarColor(ContextCompat.getColor(mContext, android.R.color.black));
+            options.setStatusBarColor(ContextCompat.getColor(mContext, android.R.color.black));
+            Uri uri = Uri.fromFile(new File(previewFilePath));
+            UCrop.of(uri, uri)
+                    .withOptions(options)
+                    .start(mContext);
         });
 
         if (confirmMediaResult != null)
@@ -311,31 +305,25 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             mediaPlayer.setDataSource(previewFilePath);
             mediaPlayer.setDisplay(holder);
             mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-            mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                @Override
-                public void onPrepared(MediaPlayer mp) {
-                    mediaController = new MediaController(mContext);
-                    mediaController.setAnchorView(surfaceView);
-                    mediaController.setMediaPlayer(MediaPlayerControlImpl);
+            mediaPlayer.setOnPreparedListener(mp -> {
+                mediaController = new MediaController(mContext);
+                mediaController.setAnchorView(surfaceView);
+                mediaController.setMediaPlayer(MediaPlayerControlImpl);
 
-                    int videoWidth = mp.getVideoWidth();
-                    int videoHeight = mp.getVideoHeight();
+                int videoWidth = mp.getVideoWidth();
+                int videoHeight = mp.getVideoHeight();
 
-                    videoPreviewContainer.setAspectRatio((double) videoWidth / videoHeight);
+                videoPreviewContainer.setAspectRatio((double) videoWidth / videoHeight);
 
-                    mediaPlayer.start();
-                    mediaPlayer.seekTo(currentPlaybackPosition);
+                mediaPlayer.start();
+                mediaPlayer.seekTo(currentPlaybackPosition);
 
-                    if (!isVideoPlaying)
-                        mediaPlayer.pause();
-                }
+                if (!isVideoPlaying)
+                    mediaPlayer.pause();
             });
-            mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
-                @Override
-                public boolean onError(MediaPlayer mp, int what, int extra) {
-                    finish();
-                    return true;
-                }
+            mediaPlayer.setOnErrorListener((mp, what, extra) -> {
+                finish();
+                return true;
             });
             mediaPlayer.prepareAsync();
         } catch (Exception e) {
