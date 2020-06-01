@@ -7,6 +7,7 @@ import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.media.CamcorderProfile;
 import android.os.Build;
+import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -30,6 +31,7 @@ import java.util.Locale;
 public final class CameraHelper {
 
     public final static String TAG = "CameraHelper";
+    public static final String CAPTURED_IMAGES_DIR = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath();
 
 
     private CameraHelper() {
@@ -72,9 +74,9 @@ public final class CameraHelper {
         }
     }
 
-    public static File getOutputMediaFile(Context context, @CameraConfiguration.MediaAction int mediaAction) {
-        File mediaStorageDir = context.getFilesDir();
-
+    public static File getOutputMediaFile(Context context, String rootMediaPath, @CameraConfiguration.MediaAction int mediaAction) {
+        if (TextUtils.isEmpty(rootMediaPath)) rootMediaPath = CAPTURED_IMAGES_DIR;
+        File mediaStorageDir = new File(rootMediaPath);
         if (!mediaStorageDir.exists()) {
             if (!mediaStorageDir.mkdirs()) {
                 Log.d(TAG, "Failed to create directory.");
@@ -82,7 +84,7 @@ public final class CameraHelper {
             }
         }
 
-        String timeStamp = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss", Locale.ENGLISH)
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss_SSS", Locale.ENGLISH)
                 .format(new Date());
         File mediaFile;
         if (mediaAction == CameraConfiguration.MEDIA_ACTION_PHOTO) {

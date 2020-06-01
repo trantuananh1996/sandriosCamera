@@ -27,9 +27,9 @@ public class Camera2Activity extends BaseSandriosActivity<String> {
     @Override
     public CameraController<String> createCameraController(CameraView cameraView, ConfigurationProvider configurationProvider) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-            return new Camera2ControllerAPI24(cameraView, configurationProvider);
+            return new Camera2ControllerAPI24(cameraView, configurationProvider, getRootMediaPath());
         else
-            return new Camera2Controller(cameraView, configurationProvider);
+            return new Camera2Controller(cameraView, configurationProvider, getRootMediaPath());
     }
 
     @Override

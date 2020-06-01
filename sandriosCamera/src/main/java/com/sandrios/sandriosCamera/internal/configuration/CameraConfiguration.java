@@ -51,6 +51,7 @@ public final class CameraConfiguration {
         String CAMERA_TYPE = "com.sandrios.sandriosCamera.camera_type";
         String ENABLE_PREVIEW = "com.sandrios.sandriosCamera.enable_preview";
         String AUTO_RECORD = "com.sandrios.sandriosCamera.auto_record";
+        String ROOT_MEDIA_PATH = "com.sandrios.sandriosCamera.root_media_path";
     }
 
     @IntDef({MEDIA_QUALITY_AUTO, MEDIA_QUALITY_LOWEST, MEDIA_QUALITY_LOW, MEDIA_QUALITY_MEDIUM, MEDIA_QUALITY_HIGH, MEDIA_QUALITY_HIGHEST})

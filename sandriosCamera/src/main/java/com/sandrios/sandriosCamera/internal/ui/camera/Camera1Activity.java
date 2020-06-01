@@ -23,7 +23,7 @@ public class Camera1Activity extends BaseSandriosActivity<Integer> {
 
     @Override
     public CameraController<Integer> createCameraController(CameraView cameraView, ConfigurationProvider configurationProvider) {
-        return new Camera1Controller(cameraView, configurationProvider);
+        return new Camera1Controller(cameraView, configurationProvider, getRootMediaPath());
     }
 
     @Override

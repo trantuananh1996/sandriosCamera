@@ -37,10 +37,17 @@ public class Camera1Controller implements CameraController<Integer>,
     private CameraView cameraView;
 
     private File outputFile;
+    String rootMediaPath;
 
-    public Camera1Controller(CameraView cameraView, ConfigurationProvider configurationProvider) {
+    public Camera1Controller(CameraView cameraView, ConfigurationProvider configurationProvider, String rootMediaPath) {
         this.cameraView = cameraView;
         this.configurationProvider = configurationProvider;
+        this.rootMediaPath = rootMediaPath;
+    }
+
+    @Override
+    public void setRootMediaPath(String rootMediaPath) {
+        this.rootMediaPath = rootMediaPath;
     }
 
     @Override
@@ -67,13 +74,13 @@ public class Camera1Controller implements CameraController<Integer>,
 
     @Override
     public void takePhoto() {
-        outputFile = CameraHelper.getOutputMediaFile(cameraView.getActivity(), CameraConfiguration.MEDIA_ACTION_PHOTO);
+        outputFile = CameraHelper.getOutputMediaFile(cameraView.getActivity(), rootMediaPath, CameraConfiguration.MEDIA_ACTION_PHOTO);
         cameraManager.takePhoto(outputFile, this);
     }
 
     @Override
     public void startVideoRecord() {
-        outputFile = CameraHelper.getOutputMediaFile(cameraView.getActivity(), CameraConfiguration.MEDIA_ACTION_VIDEO);
+        outputFile = CameraHelper.getOutputMediaFile(cameraView.getActivity(), rootMediaPath, CameraConfiguration.MEDIA_ACTION_VIDEO);
         cameraManager.startVideoRecord(outputFile, this);
     }
 

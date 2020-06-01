@@ -92,6 +92,11 @@ public abstract class BaseSandriosActivity<CameraId> extends SandriosCameraActiv
     private List<Media> mediaList = new ArrayList<>();
     private CameraControlPanel cameraControlPanel;
     private AlertDialog settingsDialog;
+    private String rootMediaPath;
+
+    public String getRootMediaPath() {
+        return rootMediaPath;
+    }
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -138,7 +143,7 @@ public abstract class BaseSandriosActivity<CameraId> extends SandriosCameraActiv
         photoQualities = getPhotoQualityOptions();
         Bundle bundle = getIntent().getExtras();
         if (bundle != null && bundle.containsKey(CameraConfiguration.Arguments.CAMERA_TYPE)) {
-            Log.e("Here","jump");
+            Log.e("Here", "jump");
             int cameraType = bundle.getInt(CameraConfiguration.Arguments.CAMERA_TYPE);
             getIntent().removeExtra(CameraConfiguration.Arguments.CAMERA_TYPE);
             if (cameraType != currentCameraType) {
@@ -244,6 +249,11 @@ public abstract class BaseSandriosActivity<CameraId> extends SandriosCameraActiv
                 if (mediaAction == CameraConfiguration.MEDIA_ACTION_VIDEO) {
                     autoRecord = bundle.getBoolean(CameraConfiguration.Arguments.AUTO_RECORD);
                 }
+            }
+            if (bundle.containsKey(CameraConfiguration.Arguments.ROOT_MEDIA_PATH)) {
+                rootMediaPath = bundle.getString(CameraConfiguration.Arguments.ROOT_MEDIA_PATH);
+                if (getCameraController() != null)
+                    getCameraController().setRootMediaPath(rootMediaPath);
             }
         }
     }
@@ -455,7 +465,7 @@ public abstract class BaseSandriosActivity<CameraId> extends SandriosCameraActiv
         int mimeType = getMimeType(getApplicationContext(), filePath);
         Intent resultIntent = new Intent();
         resultIntent.putExtra(SandriosCamera.MEDIA, new Media(mimeType, filePath));
-        resultIntent.putExtra("cameraType",currentCameraType);
+        resultIntent.putExtra("cameraType", currentCameraType);
         setResult(RESULT_OK, resultIntent);
         this.finish();
     }

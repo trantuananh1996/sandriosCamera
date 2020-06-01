@@ -1,7 +1,6 @@
 package com.sandrios.sandriosCamera.internal.controller.impl;
 
 import android.annotation.TargetApi;
-import android.hardware.Camera;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -40,10 +39,18 @@ public class Camera2ControllerAPI24 implements CameraController<String>,
     private CameraView cameraView;
 
     private File outputFile;
+    String rootMediaPath;
 
-    public Camera2ControllerAPI24(CameraView cameraView, ConfigurationProvider configurationProvider) {
+    public Camera2ControllerAPI24(CameraView cameraView, ConfigurationProvider configurationProvider, String rootMediaPath) {
+        LogUtils.d("Camera2ControllerAPI24() called with: cameraView = [" + cameraView + "], configurationProvider = [" + configurationProvider + "], rootMediaPath = [" + rootMediaPath + "]");
         this.cameraView = cameraView;
         this.configurationProvider = configurationProvider;
+        this.rootMediaPath = rootMediaPath;
+    }
+
+    @Override
+    public void setRootMediaPath(String rootMediaPath) {
+        this.rootMediaPath = rootMediaPath;
     }
 
     @Override
@@ -71,13 +78,13 @@ public class Camera2ControllerAPI24 implements CameraController<String>,
 
     @Override
     public void takePhoto() {
-        outputFile = CameraHelper.getOutputMediaFile(cameraView.getActivity(), CameraConfiguration.MEDIA_ACTION_PHOTO);
+        outputFile = CameraHelper.getOutputMediaFile(cameraView.getActivity(), rootMediaPath, CameraConfiguration.MEDIA_ACTION_PHOTO);
         camera2Manager.takePhoto(outputFile, this);
     }
 
     @Override
     public void startVideoRecord() {
-        outputFile = CameraHelper.getOutputMediaFile(cameraView.getActivity(), CameraConfiguration.MEDIA_ACTION_VIDEO);
+        outputFile = CameraHelper.getOutputMediaFile(cameraView.getActivity(), rootMediaPath, CameraConfiguration.MEDIA_ACTION_VIDEO);
         camera2Manager.startVideoRecord(outputFile, this);
     }
 

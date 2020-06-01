@@ -2,6 +2,7 @@ package com.sandrios.sandriosCamera.internal;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.text.TextUtils;
 
 import com.sandrios.sandriosCamera.internal.configuration.CameraConfiguration;
 import com.sandrios.sandriosCamera.internal.ui.camera.Camera1Activity;
@@ -26,6 +27,7 @@ public class SandriosCamera {
     private boolean enableImageCrop = false;
     private long videoSize = -1;
     private CameraSwitchView.OnCameraTypeChangeListener cameraTypeChangeListener;
+    private String rootMediaPath = "";
 
     public static SandriosCamera with() {
         if (mInstance == null) {
@@ -36,6 +38,11 @@ public class SandriosCamera {
 
     public SandriosCamera setShowPicker(boolean showPicker) {
         this.showPicker = showPicker;
+        return mInstance;
+    }
+
+    public SandriosCamera setRootMediaPath(String rootMediaPath) {
+        this.rootMediaPath = rootMediaPath;
         return mInstance;
     }
 
@@ -89,6 +96,8 @@ public class SandriosCamera {
             cameraIntent.putExtra(CameraConfiguration.Arguments.AUTO_RECORD, autoRecord);
             cameraIntent.putExtra(CameraConfiguration.Arguments.ENABLE_PREVIEW, enablePreview);
             cameraIntent.putExtra(CameraConfiguration.Arguments.CAMERA_TYPE, cameraType);
+            if (!TextUtils.isEmpty(rootMediaPath))
+                cameraIntent.putExtra(CameraConfiguration.Arguments.ROOT_MEDIA_PATH, rootMediaPath);
             cameraIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
             if (videoSize > 0) {
                 cameraIntent.putExtra(CameraConfiguration.Arguments.VIDEO_FILE_SIZE, videoSize * 1024 * 1024);

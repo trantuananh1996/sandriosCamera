@@ -45,4 +45,5 @@ public interface CameraController<CameraId> {
 
     void setFlashMode(@CameraConfiguration.FlashMode int flashMode);
 
+    void setRootMediaPath(String rootMediaPath);
 }
