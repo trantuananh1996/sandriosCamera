@@ -3,9 +3,14 @@ package com.sandrios.sandriosCamera.internal.utils;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.media.CamcorderProfile;
+import android.media.ExifInterface;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.text.TextUtils;
@@ -14,6 +19,8 @@ import android.util.Log;
 import com.sandrios.sandriosCamera.internal.configuration.CameraConfiguration;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,6 +29,8 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+
+import static com.yalantis.ucrop.util.BitmapLoadUtils.calculateInSampleSize;
 
 /**
  * Created by Arpit Gandhi on 7/6/16.
@@ -465,4 +474,66 @@ public final class CameraHelper {
         }
 
     }
+
+
+
+    /**
+     * Rotate an image if required.
+     *
+     * @param selectedImage Image URI
+     * @return The resulted Bitmap after manipulation
+     */
+    public static Bitmap getBitmap(Context context, String selectedImage) throws IOException {
+        int maxDimen = 1152;
+        //Decode image size
+        BitmapFactory.Options o = new BitmapFactory.Options();
+        o.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(selectedImage, o);
+//        Log.e("Test", "ABC");
+        int original_width = o.outWidth;
+        int original_height = o.outHeight;
+        int new_width = original_width;
+        int new_height = original_height;
+        if (original_width > maxDimen) {
+            new_width = maxDimen;
+            new_height = (new_width * original_height) / original_width;
+        }
+        if (new_height > maxDimen) {
+            new_height = maxDimen;
+            new_width = (new_height * original_width) / original_height;
+        }
+
+        //Decode with inSampleSize
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inSampleSize = calculateInSampleSize(o, new_width, new_height);
+        Bitmap bitmap = BitmapFactory.decodeFile(selectedImage, options);
+
+        InputStream input = context.getContentResolver().openInputStream(Uri.fromFile(new File(selectedImage)));
+        ExifInterface ei;
+        if (Build.VERSION.SDK_INT > 23)
+            ei = new ExifInterface(input);
+        else
+            ei = new ExifInterface(selectedImage);
+
+        int orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+
+        switch (orientation) {
+            case ExifInterface.ORIENTATION_ROTATE_90:
+                return rotateImage(bitmap, 90);
+            case ExifInterface.ORIENTATION_ROTATE_180:
+                return rotateImage(bitmap, 180);
+            case ExifInterface.ORIENTATION_ROTATE_270:
+                return rotateImage(bitmap, 270);
+            default:
+                return bitmap;
+        }
+    }
+
+    public static Bitmap rotateImage(Bitmap source, float angle) {
+        Matrix matrix = new Matrix();
+        matrix.postRotate(angle);
+        return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(),
+                matrix, true);
+    }
+
 }

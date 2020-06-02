@@ -8,7 +8,9 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Process;
+
 import androidx.annotation.RestrictTo;
+
 import android.util.Log;
 
 import com.sandrios.sandriosCamera.internal.configuration.CameraConfiguration;
@@ -93,6 +95,7 @@ abstract class BaseCameraManager<CameraId, SurfaceListener>
     }
 
     private void stopBackgroundThread() {
+        if (backgroundThread == null) return;
         if (Build.VERSION.SDK_INT > 17) {
             backgroundThread.quitSafely();
         } else backgroundThread.quit();
