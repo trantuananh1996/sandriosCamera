@@ -72,6 +72,7 @@ public class Camera1Manager extends BaseCameraManager<Integer, SurfaceHolder.Cal
     public void openCamera(final Integer cameraId,
                            final CameraOpenListener<Integer, SurfaceHolder.Callback> cameraOpenListener) {
         this.currentCameraId = cameraId;
+        if (backgroundHandler == null) return;
         backgroundHandler.post(() -> {
             try {
                 camera = Camera.open(cameraId);
@@ -96,7 +97,10 @@ public class Camera1Manager extends BaseCameraManager<Integer, SurfaceHolder.Cal
         backgroundHandler.post(() -> {
             if (camera != null) {
                 camera.setPreviewCallback(null);
-                camera.stopFaceDetection();
+                try {
+                    camera.stopFaceDetection();
+                } catch (RuntimeException ignored) {
+                }
                 camera.release();
                 camera = null;
                 if (cameraCloseListener != null) {
@@ -110,6 +114,7 @@ public class Camera1Manager extends BaseCameraManager<Integer, SurfaceHolder.Cal
     public void takePhoto(File photoFile, CameraPhotoListener cameraPhotoListener) {
         this.outputPath = photoFile;
         this.photoListener = cameraPhotoListener;
+        if (backgroundHandler == null) return;
         backgroundHandler.post(() -> {
             if (safeToTakePicture) {
                 setCameraPhotoQuality(camera);
@@ -183,7 +188,11 @@ public class Camera1Manager extends BaseCameraManager<Integer, SurfaceHolder.Cal
 
     @Override
     public Size getPhotoSizeForQuality(@CameraConfiguration.MediaQuality int mediaQuality) {
-        return CameraHelper.getPictureSize(Size.fromList(camera.getParameters().getSupportedPictureSizes()), mediaQuality);
+        try {
+            return CameraHelper.getPictureSize(Size.fromList(camera.getParameters().getSupportedPictureSizes()), mediaQuality);
+        } catch (Exception e) {
+            return new Size(720, 1280);
+        }
     }
 
     @Override
@@ -519,7 +528,7 @@ public class Camera1Manager extends BaseCameraManager<Integer, SurfaceHolder.Cal
             Bitmap b = BitmapFactory.decodeByteArray(jdata, 0, jdata.length);
 
             Matrix matrix = new Matrix();
-            matrix.postRotate(orientation * 90-90);
+            matrix.postRotate(orientation * 90 - 90);
             bitmap = Bitmap.createBitmap(b, 0, 0, b.getWidth(), b.getHeight(), matrix, true);
 
             LogUtils.d("onPreviewFrame() called with: data = [" + data + "], cam = [" + bitmap + "]");

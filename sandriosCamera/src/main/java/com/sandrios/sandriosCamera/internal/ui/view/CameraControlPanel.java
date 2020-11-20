@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.os.FileObserver;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -60,6 +61,17 @@ public class CameraControlPanel extends RelativeLayout
     private int mediaAction;
     private boolean showImageCrop = false;
     private FileObserver fileObserver;
+    private TextView tvExtraThing;
+
+    public void setExtraText(String text) {
+        if (tvExtraThing != null) {
+            if (TextUtils.isEmpty(text)) tvExtraThing.setVisibility(GONE);
+            else {
+                tvExtraThing.setVisibility(VISIBLE);
+                tvExtraThing.setText(text);
+            }
+        }
+    }
 
     public CameraControlPanel(Context context) {
         this(context, null);
@@ -76,6 +88,7 @@ public class CameraControlPanel extends RelativeLayout
 
         LayoutInflater.from(context).inflate(R.layout.camera_control_panel_layout, this);
         setBackgroundColor(Color.TRANSPARENT);
+        tvExtraThing = findViewById(R.id.tv_extra_thing);
         settingsButton = findViewById(R.id.settings_view);
         cameraSwitchView = findViewById(R.id.front_back_camera_switcher);
         mediaActionSwitchView = findViewById(R.id.photo_video_camera_switcher);
@@ -308,7 +321,7 @@ public class CameraControlPanel extends RelativeLayout
     }
 
     public void setCameraType(int currentCameraType) {
-        Log.d("setCameraType()"," called with: currentCameraType = [" + currentCameraType + "]");
+        Log.d("setCameraType()", " called with: currentCameraType = [" + currentCameraType + "]");
         cameraSwitchView.setCameraType(currentCameraType);
     }
 

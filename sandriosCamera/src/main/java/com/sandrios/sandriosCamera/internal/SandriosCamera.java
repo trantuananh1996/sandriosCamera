@@ -28,6 +28,7 @@ public class SandriosCamera {
     private long videoSize = -1;
     private CameraSwitchView.OnCameraTypeChangeListener cameraTypeChangeListener;
     private String rootMediaPath = "";
+    private String extraText;
 
     public static SandriosCamera with() {
         if (mInstance == null) {
@@ -96,6 +97,7 @@ public class SandriosCamera {
             cameraIntent.putExtra(CameraConfiguration.Arguments.AUTO_RECORD, autoRecord);
             cameraIntent.putExtra(CameraConfiguration.Arguments.ENABLE_PREVIEW, enablePreview);
             cameraIntent.putExtra(CameraConfiguration.Arguments.CAMERA_TYPE, cameraType);
+            cameraIntent.putExtra(CameraConfiguration.Arguments.EXTRA_TEXT, extraText);
             if (!TextUtils.isEmpty(rootMediaPath))
                 cameraIntent.putExtra(CameraConfiguration.Arguments.ROOT_MEDIA_PATH, rootMediaPath);
             cameraIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -109,6 +111,15 @@ public class SandriosCamera {
     public SandriosCamera setOnCameraTypeChangeListener(CameraSwitchView.OnCameraTypeChangeListener onCameraTypeChangeListener) {
         this.cameraTypeChangeListener = onCameraTypeChangeListener;
         return mInstance;
+    }
+
+    public SandriosCamera setExtraText(String extraText) {
+        this.extraText = extraText;
+        return mInstance;
+    }
+
+    public String getExtraText() {
+        return extraText;
     }
 
     public class MediaType {

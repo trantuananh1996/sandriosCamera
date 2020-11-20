@@ -1,7 +1,6 @@
 package com.sandrios.sandriosCamera.internal.ui;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ContentResolver;
@@ -48,6 +47,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.sandrios.sandriosCamera.internal.configuration.CameraConfiguration.Arguments.EXTRA_TEXT;
+import static com.sandrios.sandriosCamera.internal.configuration.CameraConfiguration.MEDIA_QUALITY_AUTO;
+
 /**
  * Created by Arpit Gandhi on 12/1/16.
  */
@@ -86,7 +88,7 @@ public abstract class BaseSandriosActivity<CameraId> extends SandriosCameraActiv
     @CameraSwitchView.CameraType
     protected int currentCameraType = CameraSwitchView.CAMERA_TYPE_REAR;
     @CameraConfiguration.MediaQuality
-    protected int newQuality = -1;
+    protected int newQuality = MEDIA_QUALITY_AUTO;
     @CameraConfiguration.FlashMode
     protected int flashMode = CameraConfiguration.FLASH_MODE_AUTO;
     private List<Media> mediaList = new ArrayList<>();
@@ -136,7 +138,6 @@ public abstract class BaseSandriosActivity<CameraId> extends SandriosCameraActiv
 
     @Override
     protected void onCameraControllerReady() {
-        Log.d("onCameraControllerReady() ", "called");
         super.onCameraControllerReady();
 
         videoQualities = getVideoQualityOptions();
@@ -188,8 +189,8 @@ public abstract class BaseSandriosActivity<CameraId> extends SandriosCameraActiv
 
             if (bundle.containsKey(CameraConfiguration.Arguments.MEDIA_QUALITY)) {
                 switch (bundle.getInt(CameraConfiguration.Arguments.MEDIA_QUALITY)) {
-                    case CameraConfiguration.MEDIA_QUALITY_AUTO:
-                        mediaQuality = CameraConfiguration.MEDIA_QUALITY_AUTO;
+                    case MEDIA_QUALITY_AUTO:
+                        mediaQuality = MEDIA_QUALITY_AUTO;
                         break;
                     case CameraConfiguration.MEDIA_QUALITY_HIGHEST:
                         mediaQuality = CameraConfiguration.MEDIA_QUALITY_HIGHEST;
@@ -290,6 +291,11 @@ public abstract class BaseSandriosActivity<CameraId> extends SandriosCameraActiv
 
             if (autoRecord) {
                 new Handler().postDelayed(() -> cameraControlPanel.startRecording(), 1500);
+            }
+
+            if (getIntent().getExtras() != null) {
+                String text = getIntent().getExtras().getString(EXTRA_TEXT);
+                cameraControlPanel.setExtraText(text);
             }
         }
         return cameraControlPanel;
@@ -495,6 +501,7 @@ public abstract class BaseSandriosActivity<CameraId> extends SandriosCameraActiv
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
             if (requestCode == REQUEST_PREVIEW_CODE) {
                 if (PreviewActivity.isResultConfirm(data)) {
@@ -525,7 +532,7 @@ public abstract class BaseSandriosActivity<CameraId> extends SandriosCameraActiv
         String mimeTypeString
                 = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
         int mimeType = SandriosCamera.MediaType.PHOTO;
-        if (mimeTypeString.toLowerCase().contains("video")) {
+        if (mimeTypeString != null && mimeTypeString.toLowerCase().contains("video")) {
             mimeType = SandriosCamera.MediaType.VIDEO;
         }
         return mimeType;
@@ -546,12 +553,12 @@ public abstract class BaseSandriosActivity<CameraId> extends SandriosCameraActiv
 
     protected int getVideoOptionCheckedIndex() {
         int checkedIndex = -1;
-        if (mediaQuality == CameraConfiguration.MEDIA_QUALITY_AUTO) checkedIndex = 0;
+        if (mediaQuality == MEDIA_QUALITY_AUTO) checkedIndex = 0;
         else if (mediaQuality == CameraConfiguration.MEDIA_QUALITY_HIGH) checkedIndex = 1;
         else if (mediaQuality == CameraConfiguration.MEDIA_QUALITY_MEDIUM) checkedIndex = 2;
         else if (mediaQuality == CameraConfiguration.MEDIA_QUALITY_LOW) checkedIndex = 3;
 
-        if (passedMediaQuality != CameraConfiguration.MEDIA_QUALITY_AUTO) checkedIndex--;
+        if (passedMediaQuality != MEDIA_QUALITY_AUTO) checkedIndex--;
 
         return checkedIndex;
     }

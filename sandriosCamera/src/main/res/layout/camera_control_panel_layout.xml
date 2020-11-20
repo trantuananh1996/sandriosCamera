@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/transparent">
 
     <RelativeLayout
+        android:id="@+id/settingPanel"
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:layout_alignParentTop="true"
@@ -12,7 +15,7 @@
         android:layout_alignParentRight="true"
         android:paddingTop="10dp">
 
-        <ImageButton
+        <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/settings_view"
             android:layout_width="40dp"
             android:layout_height="40dp"
@@ -42,6 +45,19 @@
             android:visibility="gone" />
 
     </RelativeLayout>
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tv_extra_thing"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/settingPanel"
+        android:layout_centerHorizontal="true"
+        android:background="#B40EA1E5"
+        android:gravity="center"
+        android:padding="10dp"
+        android:textColor="@color/white"
+        android:textSize="16sp"
+        tools:text="Text nào đó sẽ hiển thị ở đây" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/horizontal_gallery_list"
@@ -78,7 +94,7 @@
             android:checked="false"
             android:gravity="center" />
 
-        <TextView
+        <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/record_duration_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -89,7 +105,7 @@
             android:textSize="14sp"
             android:visibility="invisible" />
 
-        <TextView
+        <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/record_size_mb_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
