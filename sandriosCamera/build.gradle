@@ -1,36 +1,22 @@
 apply plugin: 'com.android.library'
-apply plugin: 'com.jfrog.bintray'
-apply plugin: 'com.github.dcendents.android-maven'
 
 buildscript {
     repositories {
         jcenter()
+        maven { url "https://jitpack.io" }
     }
     dependencies {
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
-        classpath 'com.github.dcendents:android-maven-gradle-plugin:1.5'
     }
 }
 
-group = 'com.sandrios.android'
-version = '1.2.6'
 
-ext {
-    PUBLISH_GROUP_ID = 'com.sandrios.android'
-    PUBLISH_ARTIFACT_ID = 'sandriosCamera'
-    PUBLISH_VERSION = version
-    PUBLISH_CODE = 17
-}
 
 android {
-    compileSdkVersion 28
-    buildToolsVersion "28.0.3"
+    compileSdkVersion 29
 
     defaultConfig {
         minSdkVersion 14
-        targetSdkVersion 28
-        versionCode PUBLISH_CODE
-        versionName PUBLISH_VERSION
+        targetSdkVersion 29
     }
 
     buildTypes {
@@ -50,86 +36,14 @@ android {
     }
 }
 
-install {
-    repositories.mavenInstaller {
-        pom.project {
-            name PUBLISH_GROUP_ID
-            description 'Simple integration of universal camera in android for easy image and video capture.'
-            url 'https://github.com/sandrios/sandriosCamera'
-            inceptionYear '2019'
-
-            packaging 'aar'
-            version PUBLISH_VERSION
-
-            scm {
-                connection 'https://github.com/sandrios/sandriosCamera.git'
-                url 'https://github.com/sandrios/sandriosCamera'
-
-            }
-            developers {
-                developer {
-                    name 'arpitgandhi9'
-                }
-            }
-        }
-
-        pom.withXml {
-            def dependenciesNode = asNode().appendNode('dependencies')
-
-            project.configurations.implementation.allDependencies.each {
-                def groupId = it.group
-                def artifactId = it.name
-                // If we specify an artifact id that differs from the project name, it won't
-                // match. To avoid that, we look up the artifact id (and group) by property
-                // for any project dependencies.
-                // TODO: there must be a neater way to do this.
-                if (it instanceof ProjectDependency) {
-                    def properties = it.getDependencyProject().getProperties()
-                    groupId = properties.get("GROUP")
-                    artifactId = properties.get("POM_ARTIFACT_ID")
-                }
-                def dependencyNode = dependenciesNode.appendNode('dependency')
-                dependencyNode.appendNode('groupId', groupId)
-                dependencyNode.appendNode('artifactId', artifactId)
-                dependencyNode.appendNode('version', it.version)
-                dependencyNode.appendNode('scope', 'compile')
-            }
-        }
-    }
-}
-
-bintray {
-    Properties properties = new Properties()
-    properties.load(project.rootProject.file('local.properties').newDataInputStream())
-    user = properties.getProperty('bintray.user')
-    key = properties.getProperty('bintray.apikey')
-    configurations = ['archives']
-    pkg {
-        repo = 'android'
-        name = 'sandriosCamera'
-        userOrg = 'sandriosstudios'
-        desc = 'Android solution to simplify work with different camera apis.'
-        licenses = ['MIT']
-        labels = ['android', 'camera', 'photo', 'video']
-        websiteUrl = 'https://github.com/sandrios/sandriosCamera'
-        issueTrackerUrl = 'https://github.com/sandrios/sandriosCamera/issues'
-        vcsUrl = 'https://github.com/sandrios/sandriosCamera.git'
-        version {
-            name = PUBLISH_VERSION
-            vcsTag = PUBLISH_VERSION
-            desc = 'WIP'
-            released = new Date()
-        }
-    }
-}
-
 repositories {
     jcenter()
     google()
+    maven { url "https://jitpack.io" }
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
     implementation 'androidx.annotation:annotation:1.1.0'
     implementation 'com.github.trantuananh1996:MultiImagePicker:1.3.5'

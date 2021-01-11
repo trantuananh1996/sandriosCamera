@@ -45,10 +45,11 @@ android {
 repositories {
     jcenter()
     google()
+    maven { url "https://jitpack.io" }
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.0.2'
+    implementation 'androidx.appcompat:appcompat:1.2.0'
 //    implementation project(':sandriosCamera')
         implementation 'com.sandrios.android:sandriosCamera:1.2.6'
 }
