@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.sandrios.sandriosCamera">
 
     <uses-permission android:name="android.permission.CAMERA" />
@@ -16,7 +17,7 @@
         android:name="android.hardware.telephony"
         android:required="false" />
 
-    <application>
+    <application android:requestLegacyExternalStorage="true">
         <activity
             android:name=".internal.ui.camera.Camera1Activity"
             android:screenOrientation="portrait"
@@ -32,6 +33,7 @@
 
         <activity
             android:name="com.yalantis.ucrop.UCropActivity"
+            tools:replace="android:theme"
             android:screenOrientation="portrait"
             android:theme="@style/ThemeFullscreen.Crop" />
     </application>

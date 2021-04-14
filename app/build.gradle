@@ -1,15 +1,16 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 28
-    buildToolsVersion "28.0.3"
+    compileSdkVersion 29
 
     defaultConfig {
         applicationId "com.sandrios.sandriosCamera.sample"
-        minSdkVersion 14
-        targetSdkVersion 28
+        minSdkVersion 17
+        targetSdkVersion 29
         versionCode 11
         versionName '1.2.6'
+        multiDexEnabled true
+
     }
 
     signingConfigs {
@@ -37,19 +38,26 @@ android {
         }
     }
 
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
     lintOptions {
         abortOnError false
     }
 }
 
 repositories {
-    jcenter()
+    maven {
+        url = "https://jcenter.bintray.com"
+    }
     google()
     maven { url "https://jitpack.io" }
 }
 
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.2.0'
-//    implementation project(':sandriosCamera')
-        implementation 'com.sandrios.android:sandriosCamera:1.2.6'
+    implementation project(':sandriosCamera')
+//        implementation 'com.sandrios.android:sandriosCamera:1.2.6'
 }
